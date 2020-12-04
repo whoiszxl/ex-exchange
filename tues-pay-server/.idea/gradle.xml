@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
+  <component name="GradleMigrationSettings" migrationVersion="1" />
   <component name="GradleSettings">
     <option name="linkedExternalProjectsSettings">
       <GradleProjectSettings>
@@ -11,6 +12,7 @@
             <option value="$PROJECT_DIR$/bitcoin-pay" />
             <option value="$PROJECT_DIR$/erc20-pay" />
             <option value="$PROJECT_DIR$/eth-pay" />
+            <option value="$PROJECT_DIR$/pay-center" />
           </set>
         </option>
       </GradleProjectSettings>

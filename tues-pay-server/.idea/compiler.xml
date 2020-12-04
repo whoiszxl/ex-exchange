@@ -1,6 +1,18 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="CompilerConfiguration">
+    <annotationProcessing>
+      <profile name="Gradle Imported" enabled="true">
+        <outputRelativeToContentRoot value="true" />
+        <processorPath useClasspath="false">
+          <entry name="$PROJECT_DIR$/../../../1.exchange_develop/gradle-6.5/caches/modules-2/files-2.1/org.projectlombok/lombok/1.18.16/6dc192c7f93ec1853f70d59d8a6dcf94eb42866/lombok-1.18.16.jar" />
+        </processorPath>
+        <module name="tues-pay-server.eth-pay.main" />
+        <module name="tues-pay-server.erc20-pay.main" />
+        <module name="tues-pay-server.bitcoin-pay.main" />
+        <module name="tues-pay-server.pay-center.main" />
+      </profile>
+    </annotationProcessing>
     <bytecodeTargetLevel target="1.8" />
   </component>
 </project>
