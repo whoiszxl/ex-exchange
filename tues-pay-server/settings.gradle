@@ -1,0 +1,5 @@
+rootProject.name = 'tues-pay-server'
+include 'bitcoin-pay'
+include 'erc20-pay'
+include 'eth-pay'
+
