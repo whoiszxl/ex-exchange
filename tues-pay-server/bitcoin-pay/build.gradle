@@ -3,7 +3,6 @@ plugins {
     id 'io.spring.dependency-management' version '1.0.10.RELEASE'
     id 'java'
 }
-
 group 'com.whoiszxl.bitcoin'
 version '1.0.0'
 
@@ -35,5 +34,7 @@ dependencies {
 
     //bitcoin rpc call
     compile group: 'wf.bitcoin', name: 'bitcoin-rpc-client', version: '1.1.0'
+
+    compile project(":pay-core")
 
 }

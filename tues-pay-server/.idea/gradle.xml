@@ -13,6 +13,7 @@
             <option value="$PROJECT_DIR$/erc20-pay" />
             <option value="$PROJECT_DIR$/eth-pay" />
             <option value="$PROJECT_DIR$/pay-center" />
+            <option value="$PROJECT_DIR$/pay-core" />
           </set>
         </option>
       </GradleProjectSettings>
