@@ -69,7 +69,7 @@ DROP TABLE IF EXISTS `pay_height`;
 CREATE TABLE `pay_height` (
   `currency_id` int(10) NOT NULL COMMENT '币种ID',
   `currency_name` varchar(32) NOT NULL COMMENT '货币名称',
-  `height` decimal(40,18) NOT NULL COMMENT '当前服务扫描区块高度',
+  `height` bigint(20) NOT NULL COMMENT '当前服务扫描区块高度',
   `updated_at` datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
-  PRIMARY KEY (`id`)
+  PRIMARY KEY (`currency_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='区块高度同步记录';

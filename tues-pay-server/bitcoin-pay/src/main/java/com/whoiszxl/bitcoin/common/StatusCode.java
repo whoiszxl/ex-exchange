@@ -1,4 +1,4 @@
-package com.whoiszxl.bitcoin.common;
+package com.whoiszxl.core.common;
 
 /**
  * 常用状态码
