@@ -37,7 +37,7 @@ CREATE TABLE `pay_recharge` (
   `to_address` varchar(255) DEFAULT NULL COMMENT '关联的充值地址',
   `upchain_at` datetime COMMENT '上链时间',
   `upchain_success_at` datetime COMMENT '上链成功时间',
-  `upchain_status` tinyint(1) NOT NULL DEFAULT '2' COMMENT '上链状态，1：成功 2：失败 3：上链后等待确认中',
+  `upchain_status` tinyint(1) NOT NULL DEFAULT '2' COMMENT '上链状态，1：上链并确认成功 2：等待确认中 3：未上链',
   `height` int(20) DEFAULT NULL COMMENT '当前交易所处区块的高度',
   `created_at` datetime DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
   `updated_at` datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
