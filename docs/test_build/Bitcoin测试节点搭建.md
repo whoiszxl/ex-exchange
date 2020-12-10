@@ -63,3 +63,8 @@ bitcoin-cli -datadir=1 getnewaddress
 bitcoin-cli -datadir=1 generate 100
 
 ```
+
+8. 发送交易
+```sh
+bitcoin-cli -datadir=2 sendtoaddress 2NFaZceBAGwa2QeMk1HVKsLXP6yJ2tnZhB4 1.99
+```

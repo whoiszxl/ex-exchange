@@ -22,11 +22,11 @@ public class ExceptionCatchAdvice {
         return Result.buildError(exception.getMessage());
     }
 
-    @ExceptionHandler(SystemException.class)
+    @ExceptionHandler(AssertException.class)
     @ResponseBody
-    public Result<String> systemException(SystemException exception){
+    public Result<String> assertException(AssertException exception){
         //记录日志
-        log.error("全局system异常捕捉:{}",exception.getMessage());
+        log.info("全局system异常捕捉:{}",exception.getMessage());
         return Result.buildError(exception.getMessage());
     }
 }

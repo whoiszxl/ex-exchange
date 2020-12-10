@@ -85,6 +85,9 @@ public class ScanTask {
                     }
 
                     //拿到地址在数据库判断记录是否存在
+                    if(CollectionUtils.isEmpty(out.scriptPubKey().addresses())) {
+                        continue;
+                    }
                     String address = out.scriptPubKey().addresses().get(0);
                     Recharge recharge = rechargeService.getRecharge(address, currencyName, out.value());
                     if(recharge == null) {

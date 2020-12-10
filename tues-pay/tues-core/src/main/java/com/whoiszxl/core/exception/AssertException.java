@@ -1,13 +1,13 @@
 package com.whoiszxl.core.exception;
 
-public class SystemException extends RuntimeException{
+public class AssertException extends RuntimeException{
 
     private static final long serialVersionUID = 1L;
 
-    public SystemException() {
+    public AssertException() {
         super();
     }
-    public SystemException(String message) {
+    public AssertException(String message) {
         super(message);
     }
 }
