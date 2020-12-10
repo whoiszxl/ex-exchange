@@ -6,6 +6,7 @@ import com.whoiszxl.core.entity.Recharge;
 import com.whoiszxl.core.enums.UpchainStatusEnum;
 import com.whoiszxl.core.service.CurrencyService;
 import com.whoiszxl.core.service.RechargeService;
+import com.whoiszxl.core.utils.AssertUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -14,7 +15,6 @@ import org.springframework.stereotype.Component;
 import org.springframework.util.CollectionUtils;
 import wf.bitcoin.javabitcoindrpcclient.BitcoindRpcClient;
 
-import java.math.BigDecimal;
 import java.util.Date;
 import java.util.List;
 
@@ -39,19 +39,27 @@ public class ScanTask {
     public void scanOrder() {
         //获取当前货币的配置信息
         Currency bitcoinInfo = currencyService.findCurrency(currencyName);
+        AssertUtils.isNotNull(bitcoinInfo, "数据库未配置货币信息：" + currencyName);
 
         //获取到当前与网络区块高度
         int networkBlockHeight = bitcoinClient.getBlockCount();
         Height heightObj = rechargeService.getCurrentHeight(currencyName);
-        Integer currentHeight = heightObj.getCurrentHeight();
-
-        //相隔1个区块不进行扫描
-        if(networkBlockHeight - currentHeight <= 1) {
-            log.info("不存在需要扫描的区块");
+        if(heightObj == null) {
+            Height height = new Height();
+            height.setCurrencyId(bitcoinInfo.getId());
+            height.setCurrencyName(bitcoinInfo.getCurrencyName());
+            height.setCurrentHeight(0);
+            height.setUpdatedAt(new Date());
+            rechargeService.saveCurrentHeight(height);
             return;
         }
 
-        //扫描区块
+        Integer currentHeight = heightObj.getCurrentHeight();
+
+        //相隔1个区块不进行扫描
+        AssertUtils.isFalse(networkBlockHeight - currentHeight <= 1, "不存在需要扫描的区块");
+
+        //扫描区块中的交易
         for(Integer i = currentHeight + 1; i <= networkBlockHeight; i++) {
             //通过区块高度拿到区块Hash，再通过区块Hash拿到区块对象，再从区块对象中拿到交易ID集合
             String blockHash = bitcoinClient.getBlockHash(i);
@@ -103,7 +111,7 @@ public class ScanTask {
         //更新区块高度
         heightObj.setCurrentHeight(networkBlockHeight);
         heightObj.setUpdatedAt(new Date());
-        rechargeService.updateCurrentHeight(heightObj);
+        rechargeService.saveCurrentHeight(heightObj);
 
     }
 }

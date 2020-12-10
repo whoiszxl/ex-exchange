@@ -16,6 +16,7 @@ spring:
     show-sql: true
 
 bitcoin:
+  currencyName: BTC
   nodeurl: ENC(Tjb6kL/GtwmUingUiNQEoxRlEQaBSO7+mJ7iQvMgOAdYX3yU+185LPap1GfQLHNo) #节点地址,包含了RPC账号和密码
 
 jasypt:

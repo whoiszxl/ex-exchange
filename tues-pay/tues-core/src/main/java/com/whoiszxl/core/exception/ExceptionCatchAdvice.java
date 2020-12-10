@@ -16,9 +16,17 @@ public class ExceptionCatchAdvice {
 
     @ExceptionHandler(Exception.class)
     @ResponseBody
-    public Result exception(Exception exception){
+    public Result<String> exception(Exception exception){
         //记录日志
         log.error("全局异常捕捉:{}",exception.getMessage());
+        return Result.buildError(exception.getMessage());
+    }
+
+    @ExceptionHandler(SystemException.class)
+    @ResponseBody
+    public Result<String> systemException(SystemException exception){
+        //记录日志
+        log.error("全局system异常捕捉:{}",exception.getMessage());
         return Result.buildError(exception.getMessage());
     }
 }

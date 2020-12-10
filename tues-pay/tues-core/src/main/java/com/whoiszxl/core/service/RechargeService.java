@@ -51,7 +51,16 @@ public class RechargeService {
      * 更新当前区块高度
      * @param height 区块高度记录
      */
-    public void updateCurrentHeight(Height height) {
+    public void saveCurrentHeight(Height height) {
         heightRepository.save(height);
+    }
+
+
+    /**
+     * 更新或者新增充值记录
+     * @param recharge 充值记录
+     */
+    public void saveRecharge(Recharge recharge) {
+        rechargeRepository.save(recharge);
     }
 }
