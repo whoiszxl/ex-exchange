@@ -42,6 +42,8 @@ public class Recharge implements Serializable {
 
     private Integer upchainStatus;
 
+    private Integer currentConfirm;
+
     private Integer height;
 
     private Date createdAt;

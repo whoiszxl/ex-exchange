@@ -96,6 +96,7 @@ public class ScanTask {
 
                     //更新recharge表
                     recharge.setTxHash(txId);
+                    recharge.setCurrentConfirm(transaction.confirmations());
                     recharge.setHeight(i);
                     recharge.setUpdatedAt(new Date());
                     recharge.setUpchainAt(block.time());
@@ -116,5 +117,31 @@ public class ScanTask {
         heightObj.setUpdatedAt(new Date());
         rechargeService.saveCurrentHeight(heightObj);
 
+    }
+
+    @Scheduled(fixedDelay = 5000)
+    public void confirmTx() {
+        //0. 获取当前货币的配置信息
+        Currency bitcoinInfo = currencyService.findCurrency(currencyName);
+        AssertUtils.isNotNull(bitcoinInfo, "数据库未配置货币信息：" + currencyName);
+
+        //1. 查询到所有待确认的充值单
+        List<Recharge> waitConfirmRecharge = rechargeService.getWaitConfirmRecharge(currencyName);
+        AssertUtils.isNotNull(waitConfirmRecharge, "不存在待确认的充值单");
+
+        //2. 遍历库中交易进行判断是否成功
+        for (Recharge recharge : waitConfirmRecharge) {
+            BitcoindRpcClient.RawTransaction transaction = bitcoinClient.getRawTransaction(recharge.getTxHash());
+
+            //如果链上交易确认数大于等于配置的确认数，则更新充值单为成功并更新上链成功时间，否则只更新当前确认数。
+            if(transaction.confirmations() >= bitcoinInfo.getConfirms()) {
+                recharge.setUpchainStatus(UpchainStatusEnum.SUCCESS.getCode());
+                recharge.setUpchainSuccessAt(transaction.time());
+            }
+            recharge.setCurrentConfirm(transaction.confirmations());
+            recharge.setUpdatedAt(new Date());
+
+            rechargeService.saveRecharge(recharge);
+        }
     }
 }

@@ -2,12 +2,14 @@ package com.whoiszxl.core.service;
 
 import com.whoiszxl.core.entity.Height;
 import com.whoiszxl.core.entity.Recharge;
+import com.whoiszxl.core.enums.UpchainStatusEnum;
 import com.whoiszxl.core.repository.HeightRepository;
 import com.whoiszxl.core.repository.RechargeRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
+import java.util.List;
 
 @Service
 public class RechargeService {
@@ -62,5 +64,13 @@ public class RechargeService {
      */
     public void saveRecharge(Recharge recharge) {
         rechargeRepository.save(recharge);
+    }
+
+    /**
+     * 通过货币名称获取所有待确认的充值单
+     * @param currencyName 货币名称
+     */
+    public List<Recharge> getWaitConfirmRecharge(String currencyName) {
+        return rechargeRepository.findRechargesByCurrencyNameAndUpchainStatus(currencyName, UpchainStatusEnum.WAITING_CONFIRM.getCode());
     }
 }
