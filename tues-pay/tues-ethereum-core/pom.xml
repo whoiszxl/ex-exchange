@@ -12,5 +12,26 @@
     <groupId>com.whoiszxl.ethereum</groupId>
     <artifactId>tues-ethereum-core</artifactId>
 
+    <dependencies>
+        <!-- tues core依赖 -->
+        <dependency>
+            <groupId>com.whoiszxl.core</groupId>
+            <artifactId>tues-core</artifactId>
+            <version>1.0.0</version>
+        </dependency>
+
+        <!-- springboot 依赖 -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-web</artifactId>
+        </dependency>
+
+        <!-- web3j eth依赖 -->
+        <dependency>
+            <groupId>org.web3j</groupId>
+            <artifactId>core</artifactId>
+            <version>5.0.0</version>
+        </dependency>
+    </dependencies>
 
 </project>
