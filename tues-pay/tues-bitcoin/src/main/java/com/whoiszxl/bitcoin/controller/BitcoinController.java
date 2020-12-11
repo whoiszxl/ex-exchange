@@ -1,6 +1,7 @@
 package com.whoiszxl.bitcoin.controller;
 
 import com.whoiszxl.core.common.Result;
+import com.whoiszxl.core.common.response.RechargeResponse;
 import com.whoiszxl.core.entity.Currency;
 import com.whoiszxl.core.entity.Recharge;
 import com.whoiszxl.core.enums.UpchainStatusEnum;
@@ -42,7 +43,7 @@ public class BitcoinController {
      * @return
      */
     @GetMapping("/createRecharge/{orderId}/{amount}")
-    public Result<String> createRechargeRecord(@PathVariable String orderId, @PathVariable String amount) {
+    public Result<RechargeResponse> createRechargeRecord(@PathVariable String orderId, @PathVariable String amount) {
         //数据有效性校验
         AssertUtils.hasText(orderId, "订单号不能为空");
         AssertUtils.hasText(amount, "金额不能为空");
@@ -73,7 +74,7 @@ public class BitcoinController {
         //二维码数据拼接
         String qrcodeData = newAddress + "?amount=" + amount + "&label=" + orderId;
 
-        return Result.buildSuccess(qrcodeData);
+        return Result.buildSuccess(new RechargeResponse(newAddress, qrcodeData));
     }
 
 

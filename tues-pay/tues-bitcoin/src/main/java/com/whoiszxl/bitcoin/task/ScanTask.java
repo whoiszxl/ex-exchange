@@ -34,8 +34,13 @@ public class ScanTask {
     @Autowired
     private CurrencyService currencyService;
 
-
-    @Scheduled(fixedDelay = 5000)
+    /**
+     * 扫描链上的交易是否和数据库中的充值单是否匹配，如果匹配则修改对应状态。
+     * 在最近的250个区块的出块时间一般平均为10分钟，所以定时任务运行的时间可以稍微拉长一些，降低服务器与节点的压力。
+     * 测试链使用4秒间隔，主网使用5分钟间隔（5 * 1000）。
+     * https://txstreet.com/
+     */
+    @Scheduled(fixedDelay = 300 * 1000)
     public void scanOrder() {
         //获取当前货币的配置信息
         Currency bitcoinInfo = currencyService.findCurrency(currencyName);
@@ -102,6 +107,7 @@ public class ScanTask {
                     recharge.setUpchainAt(block.time());
                     if(block.confirmations() >= bitcoinInfo.getConfirms()) {
                         recharge.setUpchainStatus(UpchainStatusEnum.SUCCESS.getCode());
+                        recharge.setUpchainSuccessAt(transaction.time());
                     }else {
                         recharge.setUpchainStatus(UpchainStatusEnum.WAITING_CONFIRM.getCode());
                     }
@@ -119,6 +125,12 @@ public class ScanTask {
 
     }
 
+    /**
+     * 确认交易，将数据库中状态为待确认的充值单再次去链上查询是否确认数超过了配置确认数。
+     * 在最近的250个区块的出块时间一般平均为10分钟，所以定时任务运行的时间可以稍微拉长一些，降低服务器与节点的压力。
+     * 测试链使用5秒间隔，主网则使用10分钟间隔（600 * 1000）。
+     * https://txstreet.com/
+     */
     @Scheduled(fixedDelay = 5000)
     public void confirmTx() {
         //0. 获取当前货币的配置信息
