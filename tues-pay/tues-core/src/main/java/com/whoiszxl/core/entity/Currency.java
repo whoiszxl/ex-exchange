@@ -44,15 +44,7 @@ public class Currency implements Serializable {
 
     private BigDecimal coldThreshold;
 
-    private String rpcUrl;
-
-    private String rpcUsername;
-
-    private String rpcPassword;
-
     private BigDecimal feeWithdraw;
-
-    private String walletUrl;
 
     private String walletKey;
 

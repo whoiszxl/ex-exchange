@@ -11,11 +11,7 @@ CREATE TABLE `pay_currency` (
   `contract_address` varchar(128) NOT NULL DEFAULT '' COMMENT '智能合约地址',
   `cold_address` varchar(128) NOT NULL DEFAULT '' COMMENT '冷钱包地址',
   `cold_threshold` decimal(36,18) NOT NULL DEFAULT '0' COMMENT '转冷钱包阈值',
-  `rpc_url` varchar(255) NOT NULL DEFAULT '' COMMENT 'rpc路径',
-  `rpc_username` varchar(255) NOT NULL DEFAULT '' COMMENT 'rpc用户名',
-  `rpc_password` varchar(255) NOT NULL DEFAULT '' COMMENT 'rpc密码',
   `fee_withdraw` decimal(36,18) NOT NULL DEFAULT '0' COMMENT '提币手续费',
-  `wallet_url` varchar(64) NOT NULL DEFAULT '' COMMENT '钱包储存路径',
   `wallet_key` varchar(64) NOT NULL DEFAULT '' COMMENT '钱包密钥',
   `confirms` tinyint(2) NOT NULL DEFAULT '1' COMMENT '充值确认数',
   `status` tinyint(1) NOT NULL DEFAULT '0' COMMENT '币种状态，0：关闭 1：开启',
@@ -71,6 +67,20 @@ CREATE TABLE `pay_height` (
   `currency_id` int(10) NOT NULL COMMENT '币种ID',
   `currency_name` varchar(32) NOT NULL COMMENT '货币名称',
   `height` bigint(20) NOT NULL COMMENT '当前服务扫描区块高度',
+  `updated_at` datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+  PRIMARY KEY (`currency_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='区块高度同步记录';
+
+
+DROP TABLE IF EXISTS `pay_currency_account`;
+CREATE TABLE `pay_currency_account` (
+  `currency_id` int(10) NOT NULL COMMENT '币种ID',
+  `currency_name` varchar(32) NOT NULL COMMENT '货币名称',
+  `height` bigint(20) NOT NULL COMMENT '当前服务扫描区块高度',
+  `keystore_name` varchar(256) DEFAULT NULL COMMENT 'keystore文件名',
+  `mnemonic` varchar(256) DEFAULT NULL COMMENT '助记词',
+  `address` varchar(256) NOT NULL COMMENT '地址',
+  `created_at` datetime DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
   `updated_at` datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
   PRIMARY KEY (`currency_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='区块高度同步记录';

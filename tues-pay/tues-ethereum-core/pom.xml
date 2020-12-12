@@ -32,6 +32,14 @@
             <artifactId>core</artifactId>
             <version>5.0.0</version>
         </dependency>
+
+        <!-- bitcoin核心依赖 -->
+        <dependency>
+            <groupId>org.bitcoinj</groupId>
+            <artifactId>bitcoinj-core</artifactId>
+            <version>0.15.9</version>
+        </dependency>
+
     </dependencies>
 
 </project>
