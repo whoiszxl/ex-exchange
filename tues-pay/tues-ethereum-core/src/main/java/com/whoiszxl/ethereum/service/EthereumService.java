@@ -66,7 +66,7 @@ public class EthereumService {
      */
     public EthereumAddress createAddressByFile() {
         try {
-            String fileName = WalletUtils.generateNewWalletFile(keystorePassword, new File(keystorePath));
+            String fileName = WalletUtils.generateNewWalletFile(keystorePassword, new File(keystorePath), false);
             Credentials credentials = WalletUtils.loadCredentials(keystorePassword, keystorePath + File.separator + fileName);
             String address = credentials.getAddress();
             return new EthereumAddress(address, fileName, null);

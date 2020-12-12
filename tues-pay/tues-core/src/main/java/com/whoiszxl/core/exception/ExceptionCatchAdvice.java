@@ -18,7 +18,7 @@ public class ExceptionCatchAdvice {
     @ResponseBody
     public Result<String> exception(Exception exception){
         //记录日志
-        log.error("全局异常捕捉:{}",exception.getMessage());
+        log.error("全局异常捕捉:{}",exception);
         return Result.buildError(exception.getMessage());
     }
 

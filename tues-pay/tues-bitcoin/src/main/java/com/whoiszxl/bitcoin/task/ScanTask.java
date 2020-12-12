@@ -37,10 +37,10 @@ public class ScanTask {
     /**
      * 扫描链上的交易是否和数据库中的充值单是否匹配，如果匹配则修改对应状态。
      * 在最近的250个区块的出块时间一般平均为10分钟，所以定时任务运行的时间可以稍微拉长一些，降低服务器与节点的压力。
-     * 测试链使用4秒间隔，主网使用5分钟间隔（5 * 1000）。
+     * 测试链使用4秒间隔，主网使用5分钟间隔（300 * 1000）。
      * https://txstreet.com/
      */
-    @Scheduled(fixedDelay = 300 * 1000)
+    @Scheduled(fixedDelay = 4 * 1000)
     public void scanOrder() {
         //获取当前货币的配置信息
         Currency bitcoinInfo = currencyService.findCurrency(currencyName);
@@ -53,7 +53,7 @@ public class ScanTask {
             Height height = new Height();
             height.setCurrencyId(bitcoinInfo.getId());
             height.setCurrencyName(bitcoinInfo.getCurrencyName());
-            height.setCurrentHeight(0);
+            height.setCurrentHeight(networkBlockHeight);
             height.setUpdatedAt(new Date());
             rechargeService.saveCurrentHeight(height);
             return;
