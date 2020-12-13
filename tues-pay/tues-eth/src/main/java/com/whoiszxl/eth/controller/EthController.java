@@ -3,6 +3,7 @@ package com.whoiszxl.eth.controller;
 import com.whoiszxl.core.common.Result;
 import com.whoiszxl.core.common.response.RechargeResponse;
 import com.whoiszxl.core.entity.Currency;
+import com.whoiszxl.core.entity.CurrencyAccount;
 import com.whoiszxl.core.entity.Recharge;
 import com.whoiszxl.core.enums.UpchainStatusEnum;
 import com.whoiszxl.core.service.CurrencyService;
@@ -51,16 +52,21 @@ public class EthController {
         AssertUtils.hasText(amount, "金额不能为空");
         AssertUtils.isDouble(amount, "金额格式错误");
 
+        Recharge checkRecharge = rechargeService.getRechargeByOrderId(currencyName, orderId);
+        if(checkRecharge != null) {
+            return Result.buildError("充值单记录已存在");
+        }
+
         //获取货币信息
-        Currency bitcoinInfo = currencyService.findCurrency(currencyName);
-        AssertUtils.isNotNull(bitcoinInfo, "数据库未配置货币信息：" + currencyName);
+        Currency ethInfo = currencyService.findCurrency(currencyName);
+        AssertUtils.isNotNull(ethInfo, "数据库未配置货币信息：" + currencyName);
 
         //构建充值单信息
         Recharge recharge = new Recharge();
         recharge.setOrderId(orderId);
         recharge.setAmount(new BigDecimal(amount));
-        recharge.setCurrencyId(bitcoinInfo.getId());
-        recharge.setCurrencyName(bitcoinInfo.getCurrencyName());
+        recharge.setCurrencyId(ethInfo.getId());
+        recharge.setCurrencyName(ethInfo.getCurrencyName());
         recharge.setUpchainStatus(UpchainStatusEnum.NOT_UPCHAIN.getCode());
         Date currentDate = new Date();
         recharge.setUpdatedAt(currentDate);
@@ -72,7 +78,17 @@ public class EthController {
         //落库
         rechargeService.saveRecharge(recharge);
 
-        //TODO 保存keystore文件与orderId的对应关系
+        //保存keystore文件与orderId的对应关系
+        CurrencyAccount account = new CurrencyAccount();
+        account.setAddress(ethereumAddress.getAddress());
+        account.setCurrencyId(ethInfo.getId());
+        account.setCurrencyName(ethInfo.getCurrencyName());
+        account.setKeystoreName(ethereumAddress.getKeystoreName());
+        account.setMnemonic(ethereumAddress.getMnemonic());
+        Date now = new Date();
+        account.setCreatedAt(now);
+        account.setUpdatedAt(now);
+        rechargeService.saveAccount(account);
 
         //二维码数据拼接
         BigDecimal amountWei = Convert.toWei(amount, Convert.Unit.ETHER);

@@ -49,6 +49,11 @@ public class BitcoinController {
         AssertUtils.hasText(amount, "金额不能为空");
         AssertUtils.isDouble(amount, "金额格式错误");
 
+        Recharge checkRecharge = rechargeService.getRechargeByOrderId(currencyName, orderId);
+        if(checkRecharge == null) {
+            return Result.buildError("充值单记录已存在");
+        }
+
         //获取货币信息
         Currency bitcoinInfo = currencyService.findCurrency(currencyName);
         AssertUtils.isNotNull(bitcoinInfo, "数据库未配置货币信息：" + currencyName);

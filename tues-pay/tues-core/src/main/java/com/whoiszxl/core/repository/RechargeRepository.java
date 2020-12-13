@@ -19,6 +19,14 @@ public interface RechargeRepository extends BaseRepository<Recharge>{
 
 
     /**
+     * 通过订单ID和货币名称获取Recharge记录
+     * @param orderId 订单ID
+     * @param currencyName 货币名称
+     * @return
+     */
+    Recharge getRechargeByOrderIdAndCurrencyName(String orderId, String currencyName);
+
+    /**
      * 通过货币名称和上链状态获取充值单列表
      * @param currencyName 货币名称
      * @param upchainStatus 上链状态
