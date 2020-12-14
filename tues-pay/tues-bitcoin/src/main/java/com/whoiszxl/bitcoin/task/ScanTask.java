@@ -148,7 +148,7 @@ public class ScanTask {
             //如果链上交易确认数大于等于配置的确认数，则更新充值单为成功并更新上链成功时间，否则只更新当前确认数。
             if(transaction.confirmations() >= bitcoinInfo.getConfirms()) {
                 recharge.setUpchainStatus(UpchainStatusEnum.SUCCESS.getCode());
-                recharge.setUpchainSuccessAt(transaction.time());
+                recharge.setUpchainSuccessAt(new Date());
             }
             recharge.setCurrentConfirm(transaction.confirmations());
             recharge.setUpdatedAt(new Date());

@@ -92,6 +92,7 @@ public class EthScanTask {
                     continue;
                 }
 
+                recharge.setFromAddress(transaction.getFrom());
                 recharge.setTxHash(transaction.getHash());
                 recharge.setCurrentConfirm(transaction.getBlockNumber().subtract(BigInteger.valueOf(i)).intValue());
                 recharge.setHeight(transaction.getBlockNumber().intValue());
@@ -114,6 +115,43 @@ public class EthScanTask {
         heightObj.setUpdatedAt(new Date());
         rechargeService.saveCurrentHeight(heightObj);
 
+    }
+
+
+
+    /**
+     * 确认交易，将数据库中状态为待确认的充值单再次去链上查询是否确认数超过了配置确认数。
+     * 在最近的300个区块的出块时间一般平均为15秒。
+     * 定时任务使用15秒间隔（15 * 1000）。
+     * https://txstreet.com/
+     */
+    @Scheduled(fixedDelay = 10 * 1000)
+    public void confirmTx() {
+        //0. 获取当前货币的配置信息
+        Currency ethInfo = currencyService.findCurrency(currencyName);
+        AssertUtils.isNotNull(ethInfo, "数据库未配置货币信息：" + currencyName);
+
+        //1. 获取当前网络的区块高度
+        Long currentHeight = ethereumService.getBlockchainHeight();
+
+        //2. 查询到所有待确认的充值单
+        List<Recharge> waitConfirmRecharge = rechargeService.getWaitConfirmRecharge(currencyName);
+        AssertUtils.isNotNull(waitConfirmRecharge, "不存在待确认的充值单");
+
+        //3. 遍历库中交易进行判断是否成功
+        for (Recharge recharge : waitConfirmRecharge) {
+            Transaction transaction = ethereumService.getTransactionByHash(recharge.getTxHash());
+
+            //如果链上交易确认数大于等于配置的确认数，则更新充值单为成功并更新上链成功时间，否则只更新当前确认数。
+            if(currentHeight - transaction.getBlockNumber().longValue()  >= ethInfo.getConfirms()) {
+                recharge.setUpchainStatus(UpchainStatusEnum.SUCCESS.getCode());
+                recharge.setUpchainSuccessAt(new Date());
+            }
+            recharge.setCurrentConfirm((int) (currentHeight - transaction.getBlockNumber().longValue()));
+            recharge.setUpdatedAt(new Date());
+
+            rechargeService.saveRecharge(recharge);
+        }
     }
 
 }
