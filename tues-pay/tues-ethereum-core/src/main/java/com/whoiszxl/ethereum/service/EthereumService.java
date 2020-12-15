@@ -23,6 +23,7 @@ import org.web3j.crypto.ECKeyPair;
 import org.web3j.crypto.Keys;
 import org.web3j.crypto.WalletUtils;
 import org.web3j.protocol.Web3j;
+import org.web3j.protocol.core.DefaultBlockParameter;
 import org.web3j.protocol.core.DefaultBlockParameterName;
 import org.web3j.protocol.core.DefaultBlockParameterNumber;
 import org.web3j.protocol.core.methods.request.Transaction;
@@ -49,6 +50,13 @@ public class EthereumService {
 
     @Value("${ethereum.keystorepassword}")
     private String keystorePassword;
+
+    /**
+     * erc20中转账事件签名的hash值，是eventLog中的topics[0]字段。
+     * 其通过keccak算法加密"Transfer(address,address,uint256)"得到结果
+     * 在线加密地址：https://emn178.github.io/online-tools/keccak_256.html
+     */
+    protected String transferEventSignature = "ddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef";
 
     @Autowired
     private Web3j web3j;
@@ -257,7 +265,7 @@ public class EthereumService {
                 return false;
             }
 
-            //3. 通过交易哈希获取到交易的收入信息
+            //3. 通过交易哈希获取到交易的收据信息
             EthGetTransactionReceipt ethGetTransactionReceipt = web3j.ethGetTransactionReceipt(txId).send();
             if(ethGetTransactionReceipt == null || ethGetTransactionReceipt.hasError() || ethGetTransactionReceipt.getTransactionReceipt().isPresent()) {
                 log.error("通过txId获取交易收入失败");
@@ -278,5 +286,64 @@ public class EthereumService {
         }
         return false;
 
+    }
+
+    /**
+     * 通过交易哈希获取到交易的收据信息
+     * @param txId 交易Hash
+     */
+    public TransactionReceipt getTransactionReceipt(String txId) {
+
+        //通过交易哈希获取到交易的收据信息
+        try {
+            EthGetTransactionReceipt ethGetTransactionReceipt = web3j.ethGetTransactionReceipt(txId).send();
+            if(ethGetTransactionReceipt == null || ethGetTransactionReceipt.hasError() || ethGetTransactionReceipt.getTransactionReceipt().isPresent()) {
+                log.error("通过txId获取交易收入失败");
+                return null;
+            }
+            Optional<TransactionReceipt> transactionReceipt = ethGetTransactionReceipt.getTransactionReceipt();
+            if(transactionReceipt.isPresent()) {
+                return transactionReceipt.get();
+            }
+            return null;
+        } catch (IOException e) {
+            log.error("通过txId获取交易收入失败", e);
+        }
+        return null;
+    }
+
+    /**
+     * 校验事件日志防止Token假充值
+     * https://mp.weixin.qq.com/s/3cMbE6p_4qCdVLa4FNA5-A
+     * @param height 区块高度
+     * @param contractAddress 合约地址
+     * @param txId 交易HASH
+     * @return
+     */
+    public boolean checkEventLog(Integer height, String contractAddress, String txId) {
+        try {
+            org.web3j.protocol.core.methods.request.EthFilter ethFilter =
+                    new org.web3j.protocol.core.methods.request.EthFilter(
+                            new DefaultBlockParameterNumber(height),
+                            new DefaultBlockParameterNumber(height),
+                            contractAddress
+                    );
+            ethFilter.addSingleTopic(transferEventSignature);
+            EthLog ethLog = web3j.ethGetLogs(ethFilter).send();
+
+            List<EthLog.LogResult> logResults = ethLog.getLogs();
+            for (EthLog.LogResult logResult : logResults) {
+                EthLog.LogObject logObject = (EthLog.LogObject) logResult;
+                Log log = logObject.get();
+
+                if(txId.equalsIgnoreCase(log.getTransactionHash())) {
+                    return true;
+                }
+            }
+
+        } catch (IOException e) {
+            log.error("校验事件日志失败", e);
+        }
+        return false;
     }
 }

@@ -13,4 +13,20 @@
     <artifactId>tues-erc20</artifactId>
 
 
+    <dependencies>
+        <!-- 以太坊核心依赖 -->
+        <dependency>
+            <groupId>com.whoiszxl.ethereum</groupId>
+            <artifactId>tues-ethereum-core</artifactId>
+            <version>1.0.0</version>
+        </dependency>
+
+        <!-- jpa依赖 -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-data-jpa</artifactId>
+        </dependency>
+
+    </dependencies>
+
 </project>
