@@ -19,3 +19,5 @@ curl -X POST \
 	"id":1
 }'
 ```
+
+5. infura可以修改二级域名的名称进行网络间的切换， 其支持：`mainnet, rposten, kovan, rinkeby, goerli`
