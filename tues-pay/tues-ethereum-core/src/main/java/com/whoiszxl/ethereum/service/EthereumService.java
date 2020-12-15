@@ -297,7 +297,7 @@ public class EthereumService {
         //通过交易哈希获取到交易的收据信息
         try {
             EthGetTransactionReceipt ethGetTransactionReceipt = web3j.ethGetTransactionReceipt(txId).send();
-            if(ethGetTransactionReceipt == null || ethGetTransactionReceipt.hasError() || ethGetTransactionReceipt.getTransactionReceipt().isPresent()) {
+            if(ethGetTransactionReceipt == null || ethGetTransactionReceipt.hasError() || !ethGetTransactionReceipt.getTransactionReceipt().isPresent()) {
                 log.error("通过txId获取交易收入失败");
                 return null;
             }
@@ -332,6 +332,9 @@ public class EthereumService {
             EthLog ethLog = web3j.ethGetLogs(ethFilter).send();
 
             List<EthLog.LogResult> logResults = ethLog.getLogs();
+            if(ObjectUtils.isEmpty(logResults)) {
+                return false;
+            }
             for (EthLog.LogResult logResult : logResults) {
                 EthLog.LogObject logObject = (EthLog.LogObject) logResult;
                 Log log = logObject.get();

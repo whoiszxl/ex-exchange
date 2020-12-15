@@ -2,6 +2,8 @@ package com.whoiszxl.erc20.task;
 
 import com.whoiszxl.core.entity.Currency;
 import com.whoiszxl.core.entity.Height;
+import com.whoiszxl.core.entity.Recharge;
+import com.whoiszxl.core.enums.UpchainStatusEnum;
 import com.whoiszxl.core.service.CurrencyService;
 import com.whoiszxl.core.service.RechargeService;
 import com.whoiszxl.core.utils.AssertUtils;
@@ -12,10 +14,20 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
+import org.web3j.abi.FunctionReturnDecoder;
+import org.web3j.abi.TypeReference;
+import org.web3j.abi.datatypes.Address;
+import org.web3j.abi.datatypes.Function;
+import org.web3j.abi.datatypes.Type;
+import org.web3j.abi.datatypes.generated.Uint256;
 import org.web3j.protocol.core.methods.response.EthBlock;
 import org.web3j.protocol.core.methods.response.Transaction;
 import org.web3j.protocol.core.methods.response.TransactionReceipt;
 
+import java.math.BigDecimal;
+import java.math.BigInteger;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 
@@ -70,27 +82,67 @@ public class Erc20ScanTask {
             //通过区块高度获取到区块中的交易信息
             EthBlock.Block block = ethereumService.getBlockByNumber(i.longValue());
             List<EthBlock.TransactionResult> transactionResults = block.getTransactions();
-            EthBlock.TransactionObject transactionObject = (EthBlock.TransactionObject) transactionResults;
-            Transaction transaction = transactionObject.get();
 
-            //通过交易Hash获取到交易的回执信息
-            TransactionReceipt txReceipt = ethereumService.getTransactionReceipt(transaction.getHash());
+            for (EthBlock.TransactionResult transactionResult : transactionResults) {
+                EthBlock.TransactionObject transactionObject = (EthBlock.TransactionObject) transactionResult;
+                Transaction transaction = transactionObject.get();
 
-            //判断状态是否是成功(1成功 0失败)
-            if(txReceipt.getStatus().equalsIgnoreCase("0x1")) {
-                //判断是否是假充值
-                boolean flag = ethereumService.checkEventLog(i, tokenInfo.getContractAddress(), transaction.getHash());
-                if(!flag) {
+                //通过交易Hash获取到交易的回执信息
+                TransactionReceipt txReceipt = ethereumService.getTransactionReceipt(transaction.getHash());
+                if(txReceipt == null) {
                     continue;
                 }
 
-                String input = transaction.getInput();
-                String toContractAddress = transaction.getTo();
-                if(!StringUtils.isEmpty(input) && input.length() >= 138 && tokenInfo.getContractAddress().equalsIgnoreCase(toContractAddress)) {
-                    //TODO
+                //判断状态是否是成功(1成功 0失败)
+                if(txReceipt.getStatus().equalsIgnoreCase("0x1")) {
+                    //判断是否是假充值
+                    boolean flag = ethereumService.checkEventLog(i, tokenInfo.getContractAddress(), transaction.getHash());
+                    if(!flag) {
+                        continue;
+                    }
+
+                    String input = transaction.getInput();
+                    String toContractAddress = transaction.getTo();
+                    if(!StringUtils.isEmpty(input) && input.length() >= 138 && tokenInfo.getContractAddress().equalsIgnoreCase(toContractAddress)) {
+                        String data = input.substring(0, 9);
+                        data = data + input.substring(17);
+                        Function function = new Function("transfer",
+                                Collections.emptyList(),
+                                Arrays.asList(new TypeReference<Address>() {
+                                }, new TypeReference<Uint256>() {
+                                }));
+
+                        List<Type> params = FunctionReturnDecoder.decode(data, function.getOutputParameters());
+
+                        //获取充币地址和金额
+                        String toAddress = params.get(0).getValue().toString();
+                        String amount = params.get(1).getValue().toString();
+
+                        Recharge recharge = rechargeService.getRecharge(toAddress, currencyName, new BigDecimal(amount));
+                        if(recharge == null) {
+                            log.info("地址不在库中：{}", transaction.getTo());
+                            continue;
+                        }
+
+                        recharge.setFromAddress(transaction.getFrom());
+                        recharge.setTxHash(transaction.getHash());
+                        recharge.setCurrentConfirm(transaction.getBlockNumber().subtract(BigInteger.valueOf(i)).intValue());
+                        recharge.setHeight(transaction.getBlockNumber().intValue());
+                        recharge.setUpchainAt(new Date(block.getTimestamp().longValue()));
+                        recharge.setUpdatedAt(new Date());
+
+                        if(i - block.getNumber().intValue() >= tokenInfo.getConfirms()) {
+                            recharge.setUpchainStatus(UpchainStatusEnum.SUCCESS.getCode());
+                            recharge.setUpchainSuccessAt(new Date(block.getTimestamp().longValue()));
+                        }else {
+                            recharge.setUpchainStatus(UpchainStatusEnum.WAITING_CONFIRM.getCode());
+                        }
+                        rechargeService.updateRecharge(recharge);
+
+                    }
+
+
                 }
-
-
             }
 
         }
