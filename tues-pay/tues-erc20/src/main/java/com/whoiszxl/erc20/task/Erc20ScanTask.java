@@ -23,6 +23,7 @@ import org.web3j.abi.datatypes.generated.Uint256;
 import org.web3j.protocol.core.methods.response.EthBlock;
 import org.web3j.protocol.core.methods.response.Transaction;
 import org.web3j.protocol.core.methods.response.TransactionReceipt;
+import org.web3j.utils.Convert;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;
@@ -79,6 +80,7 @@ public class Erc20ScanTask {
 
         //扫描区块中的交易
         for(Integer i = currentHeight + 1; i <= networkBlockHeight; i++) {
+            log.info("开始扫描区块：{}", i);
             //通过区块高度获取到区块中的交易信息
             EthBlock.Block block = ethereumService.getBlockByNumber(i.longValue());
             List<EthBlock.TransactionResult> transactionResults = block.getTransactions();
@@ -95,12 +97,6 @@ public class Erc20ScanTask {
 
                 //判断状态是否是成功(1成功 0失败)
                 if(txReceipt.getStatus().equalsIgnoreCase("0x1")) {
-                    //判断是否是假充值
-                    boolean flag = ethereumService.checkEventLog(i, tokenInfo.getContractAddress(), transaction.getHash());
-                    if(!flag) {
-                        continue;
-                    }
-
                     String input = transaction.getInput();
                     String toContractAddress = transaction.getTo();
                     if(!StringUtils.isEmpty(input) && input.length() >= 138 && tokenInfo.getContractAddress().equalsIgnoreCase(toContractAddress)) {
@@ -118,9 +114,16 @@ public class Erc20ScanTask {
                         String toAddress = params.get(0).getValue().toString();
                         String amount = params.get(1).getValue().toString();
 
-                        Recharge recharge = rechargeService.getRecharge(toAddress, currencyName, new BigDecimal(amount));
+                        BigDecimal amountDecimal = new BigDecimal(amount).movePointLeft(tokenInfo.getCurrencyDecimalsNum());
+                        Recharge recharge = rechargeService.getRecharge(toAddress, currencyName, amountDecimal);
                         if(recharge == null) {
                             log.info("地址不在库中：{}", transaction.getTo());
+                            continue;
+                        }
+
+                        //判断是否是假充值
+                        boolean flag = ethereumService.checkEventLog(i, tokenInfo.getContractAddress(), transaction.getHash());
+                        if(!flag) {
                             continue;
                         }
 
@@ -138,14 +141,15 @@ public class Erc20ScanTask {
                             recharge.setUpchainStatus(UpchainStatusEnum.WAITING_CONFIRM.getCode());
                         }
                         rechargeService.updateRecharge(recharge);
-
                     }
-
-
                 }
             }
-
         }
+
+        //更新区块高度
+        heightObj.setCurrentHeight(networkBlockHeight.intValue());
+        heightObj.setUpdatedAt(new Date());
+        rechargeService.saveCurrentHeight(heightObj);
     }
 
 
@@ -157,6 +161,29 @@ public class Erc20ScanTask {
      */
     @Scheduled(fixedDelay = 10 * 1000)
     public void confirmTx() {
+        //0. 获取当前货币的配置信息
+        Currency tokenInfo = currencyService.findCurrency(currencyName);
+        AssertUtils.isNotNull(tokenInfo, "数据库未配置货币信息：" + currencyName);
 
+        //1. 获取当前网络的区块高度
+        Long currentHeight = ethereumService.getBlockchainHeight();
+
+        //2. 查询到所有待确认的充值单
+        List<Recharge> waitConfirmRecharge = rechargeService.getWaitConfirmRecharge(currencyName);
+        AssertUtils.isNotNull(waitConfirmRecharge, "不存在待确认的充值单");
+
+        //3. 遍历库中交易进行判断是否成功
+        for (Recharge recharge : waitConfirmRecharge) {
+            Transaction transaction = ethereumService.getTransactionByHash(recharge.getTxHash());
+            //如果链上交易确认数大于等于配置的确认数，则更新充值单为成功并更新上链成功时间，否则只更新当前确认数。
+            if(currentHeight - transaction.getBlockNumber().longValue()  >= tokenInfo.getConfirms()) {
+                recharge.setUpchainStatus(UpchainStatusEnum.SUCCESS.getCode());
+                recharge.setUpchainSuccessAt(new Date());
+            }
+            recharge.setCurrentConfirm((int) (currentHeight - transaction.getBlockNumber().longValue()));
+            recharge.setUpdatedAt(new Date());
+
+            rechargeService.saveRecharge(recharge);
+        }
     }
 }

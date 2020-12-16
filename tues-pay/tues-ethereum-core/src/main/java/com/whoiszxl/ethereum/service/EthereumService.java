@@ -56,7 +56,7 @@ public class EthereumService {
      * 其通过keccak算法加密"Transfer(address,address,uint256)"得到结果
      * 在线加密地址：https://emn178.github.io/online-tools/keccak_256.html
      */
-    protected String transferEventSignature = "ddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef";
+    protected String transferEventSignature = "0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef";
 
     @Autowired
     private Web3j web3j;
