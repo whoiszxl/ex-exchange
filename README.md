@@ -19,7 +19,7 @@ sql                       -- 数据库脚本
 项目使用Java语言构建，通过定时任务对我们搭建的加密货币节点进行扫描，以此来进行充值操作。接入后，可以在生成订单的时候调用tues-pay接口（`/currencyName/createRecharge/{orderId}/{amount}`），选择对应的`currencyName`并传入订单ID与金额则可生成一笔充值单，生成充值单的过程中会触发钱包地址生成，并与订单形成对应。同时Task任务会从区块高度为0扫描到当前区块高度，将每个区块中的交易进行遍历，当匹配到充值地址与金额在数据库中有对应时，则充值单得到确认。同时，会有另一个确认订单的任务在同步运行，循环遍历当前数据库中的`已确认充值单`，当交易所在区块的确认数已经达到系统配置中的数量，则充值成功。
 
 ![工作原理图](http://hexo.whoiszxl.com/tues-pay.jpg)
-![工作原理图2](http://hexo.whoiszxl.com/tues-pay2.jpg)
+![工作原理图2](http://hexo.whoiszxl.com/tues-pay2.png)
 
 
 ## 项目部署
